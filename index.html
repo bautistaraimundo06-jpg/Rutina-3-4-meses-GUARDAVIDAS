@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>POWERBODY BAUTI APP</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ESTILO GOD LEVEL (APP STORE DARK MODE) */
+        :root {
+            --bg-body: #000000;
+            --bg-card: #121212;
+            --bg-nav: rgba(18, 18, 18, 0.95);
+            --primary: #5bffdb; /* Volt */
+            --text-main: #ffffff;
+            --text-sec: #00ffff;
+            --danger: #ff0000;
+            --warning: #ffe600;
+            --radius: 14px;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            padding-bottom: 95px; /* Espacio navbar */
+            padding-top: env(safe-area-inset-top);
+        }
+
+        /* --- HEADER --- */
+        .app-header {
+            padding: 15px 20px;
+            background: rgba(0,0,0,0.8);
+            position: sticky; top: 0; z-index: 50;
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid #222;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .app-title { font-weight: 900; font-size: 1.2rem; letter-spacing: -0.5px; color: var(--primary); }
+        
+        .header-controls { display: flex; gap: 10px; align-items: center; }
+        .week-btn-mini {
+            background: #222; border: 1px solid #333; padding: 5px 10px;
+            border-radius: 20px; font-size: 0.75rem; font-weight: 700; color: #fff;
+        }
+        .timer-badge {
+            background: #222; border: 1px solid #333; padding: 5px 10px;
+            border-radius: 20px; font-variant-numeric: tabular-nums; font-weight: 700; font-size: 0.9rem;
+            display: flex; align-items: center; gap: 5px;
+        }
+
+        /* --- TABS SCROLLABLES --- */
+        .tabs-wrapper {
+            position: sticky; top: 60px; z-index: 40; background: var(--bg-body);
+            padding: 10px 0; border-bottom: 1px solid #222;
+        }
+        .tabs-scroll {
+            display: flex; gap: 10px; overflow-x: auto; padding: 0 15px;
+            scrollbar-width: none; -ms-overflow-style: none;
+        }
+        .tabs-scroll::-webkit-scrollbar { display: none; }
+        
+        .tab-pill {
+            background: #222; border: none; color: #888;
+            padding: 8px 16px; border-radius: 20px; font-weight: 600; font-size: 0.85rem;
+            white-space: nowrap; transition: all 0.2s;
+        }
+        .tab-pill.active { background: var(--primary); color: #000; }
+
+        /* --- CONTENT --- */
+        .view-section { display: none; padding: 20px 15px; animation: fadeIn 0.3s; }
+        .view-section.active { display: block; }
+        
+        .day-title { font-size: 1.8rem; font-weight: 800; margin-bottom: 5px; line-height: 1; text-transform: uppercase; }
+        .day-sub { color: var(--text-sec); font-size: 0.9rem; margin-bottom: 25px; }
+
+        /* --- EXERCISE CARD (EL DISEÑO GOD) --- */
+        .ex-card {
+            background: var(--bg-card); border-radius: var(--radius);
+            margin-bottom: 12px; border: 1px solid #222; overflow: hidden;
+        }
+        .ex-header {
+            padding: 16px; display: flex; justify-content: space-between; align-items: center;
+            cursor: pointer; background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0));
+        }
+        .ex-name { font-weight: 700; font-size: 0.95rem; text-transform: uppercase; color: #fff; max-width: 90%; }
+        .ex-toggle { color: var(--primary); font-size: 1.2rem; font-weight: 300; }
+        
+        .ex-body { display: none; padding: 0 16px 16px 16px; border-top: 1px solid #222; }
+        .ex-card.open .ex-body { display: block; }
+        .ex-card.open .ex-header { border-bottom: 1px solid #222; }
+        .ex-card.open .ex-toggle { transform: rotate(45deg); color: var(--danger); }
+
+        .set-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin: 12px 0; }
+        .set-box { background: #000; padding: 8px; border-radius: 8px; text-align: center; border: 1px solid #222; }
+        .set-label { font-size: 0.65rem; color: #666; display: block; margin-bottom: 2px; }
+        .set-val { font-size: 0.9rem; font-weight: 700; }
+        
+        /* Colores dinámicos para semanas */
+        .highlight-s4 { border-color: var(--danger) !important; background: rgba(255, 59, 48, 0.1) !important; }
+        .text-s4 { color: var(--danger); }
+        .highlight-s5 { border-color: var(--warning) !important; background: rgba(255, 204, 0, 0.1) !important; }
+        .text-s5 { color: var(--warning); }
+
+        .tools-bar { display: flex; gap: 10px; margin-top: 15px; }
+        .btn-tool {
+            flex: 1; height: 44px; border-radius: 10px; border: none; font-weight: 700; font-size: 0.85rem;
+            display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer;
+        }
+        .btn-gif { background: #222; color: #fff; border: 1px solid #333; flex: 0.4; }
+        .btn-save { background: var(--primary); color: #000; }
+        .inp-weight {
+            background: #000; border: 1px solid #333; color: #fff; border-radius: 10px;
+            width: 80px; text-align: center; font-size: 1rem; font-weight: 600;
+        }
+
+        /* --- NAVBAR INFERIOR --- */
+        .nav-bar {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 80px;
+            background: var(--bg-nav); backdrop-filter: blur(20px); border-top: 1px solid #222;
+            display: grid; grid-template-columns: repeat(5, 1fr); z-index: 100;
+            padding-bottom: 20px; /* Safe area */
+        }
+        .nav-btn {
+            background: none; border: none; color: #666; font-size: 0.65rem; font-weight: 600;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+        }
+        .nav-btn.active { color: var(--primary); }
+        .nav-icon { font-size: 1.4rem; }
+
+        /* --- MODAL GIF --- */
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 2000; justify-content: center; align-items: center; padding: 20px;
+        }
+        .modal.show { display: flex; }
+        .modal-content { position: relative; width: 100%; max-width: 400px; }
+        .modal img { width: 100%; border-radius: 12px; border: 2px solid var(--primary); }
+        .modal-close {
+            position: absolute; top: -40px; right: 0; color: #fff; font-size: 2rem; background: none; border: none;
+        }
+
+        /* --- TIMER OVERLAY --- */
+        .timer-overlay {
+            position: fixed; top: 70px; right: 20px; background: #111; border: 1px solid #333;
+            border-radius: 12px; padding: 15px; display: none; flex-direction: column; gap: 10px; z-index: 150;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+        }
+        .t-btn { background: #222; border: 1px solid #444; color: #fff; padding: 10px; border-radius: 8px; font-weight: 700; }
+        .t-btn:active { background: var(--primary); color: #000; }
+
+        /* --- TRACKER --- */
+        .progress-box { background: #111; padding: 15px; border-radius: 12px; margin-bottom: 20px; }
+        .bar-wrap { background: #222; height: 6px; border-radius: 3px; margin-top: 5px; overflow: hidden; }
+        .bar-val { height: 100%; background: var(--primary); width: 0%; transition: width 0.3s; }
+        .food-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .food-item {
+            background: #222; padding: 15px; border-radius: 12px; cursor: pointer;
+        }
+        .food-item:active { background: var(--primary); color: #000; }
+        .food-t { font-weight: 700; display: block; }
+        .food-s { font-size: 0.75rem; opacity: 0.7; }
+
+        /* --- SELECTOR SEMANA --- */
+        .week-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95);
+            z-index: 5000; display: flex; flex-direction: column; justify-content: center; padding: 20px;
+            display: none;
+        }
+        .week-btn {
+            background: #111; border: 1px solid #333; padding: 20px; border-radius: 12px; margin-bottom: 10px;
+            color: #fff; font-weight: 700; text-align: left; display: flex; justify-content: space-between;
+        }
+        .week-btn.active { border-color: var(--primary); color: var(--primary); background: rgba(204,255,0,0.1); }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <!-- MODAL SEMANA -->
+    <div id="weekSelector" class="week-modal">
+        <h2 style="text-align: center; margin-bottom: 30px; color: #fff;">¿Semana de Entrenamiento?</h2>
+        <button class="week-btn" onclick="setWeek(1)">SEMANA 1 <span>Base (Mas tecnica, repeticiones lentas)</span></button>
+        <button class="week-btn" onclick="setWeek(2)">SEMANA 2 <span>Carga (Aumentarle el peso a s2)</span></button>
+        <button class="week-btn" onclick="setWeek(3)">SEMANA 3 <span>Sobrecarga (Aumentarle el peso a s3)</span></button>
+        <button class="week-btn" onclick="setWeek(4)" style="color:var(--danger); border-color:var(--danger)">SEMANA 4 <span>¡FALLO! 🔥</span></button>
+        <button class="week-btn" onclick="setWeek(5)" style="color:var(--warning); border-color:var(--warning)">SEMANA 5 <span>Descarga 💤 (40%,50% del pr)</span></button>
+    </div>
+
+    <!-- HEADER -->
+    <header class="app-header">
+        <div class="header-controls">
+            <div class="app-title">RUTINA PARA UN CUERPO DE GUARDAVIDAS</div>
+            <button class="week-btn-mini" id="weekBadge" onclick="openWeekModal()">S1</button>
+        </div>
+        <div class="timer-badge" onclick="toggleTimer()">
+            <span>⏱</span> <span id="timerDisplay">00:00 (DESCANSAR 1 MINUTO POR EJERCICIO)</span>
+        </div>
+    </header>
+
+    <!-- TIMER OVERLAY -->
+    <div id="timerOverlay" class="timer-overlay">
+        <button class="t-btn" onclick="startTimer(60)">1:00</button>
+        <button class="t-btn" onclick="startTimer(90)">1:30</button>
+        <button class="t-btn" onclick="startTimer(120)">2:00</button>
+        <button class="t-btn" style="border-color:var(--danger); color:var(--danger)" onclick="stopTimer()">PARAR</button>
+    </div>
+
+    <!-- MODAL GIF -->
+    <div id="gifModal" class="modal" onclick="closeGif()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeGif()">&times;</button>
+            <img id="gifImg" src="">
+        </div>
+    </div>
+
+    <!-- PESTAÑAS (SCROLL HORIZONTAL) -->
+    <div class="tabs-wrapper">
+        <div class="tabs-scroll">
+            <button class="tab-pill active" onclick="nav('lunes')">LUNES</button>
+            <button class="tab-pill" onclick="nav('miercoles')">MIÉRCOLES</button>
+            <button class="tab-pill" onclick="nav('jueves')">JUEVES</button>
+            <button class="tab-pill" onclick="nav('viernes')">VIERNES</button>
+            <button class="tab-pill" onclick="nav('tracker')">DIETA</button>
+            <button class="tab-pill" onclick="nav('GUARDAVIDAS')">GUARDAVIDAS</button>
+        </div>
+    </div>
+
+    <!-- === LUNES === -->
+    <section id="lunes" class="view-section active">
+        <div class="day-title">LUNES</div>
+        <div class="day-sub">PECHO, HOMBROS (LATERAL) Y TRÍCEPS</div>
+
+        <!-- LISTA COMPLETA RECUPERADA -->
+        <div id="list-lunes"></div>
+        
+    </section>
+
+    <!-- === MIERCOLES === -->
+    <section id="miercoles" class="view-section">
+        <div class="day-title">MIÉRCOLES</div>
+        <div class="day-sub">PIERNAS Y ABDOMEN</div>
+        <div id="list-miercoles"></div>
+    </section>
+
+    <!-- === JUEVES === -->
+    <section id="jueves" class="view-section">
+        <div class="day-title">JUEVES</div>
+        <div class="day-sub">ESPALDA, BÍCEPS, POSTERIOR</div>
+        <div id="list-jueves"></div>
+    </section>
+
+    <!-- === VIERNES === -->
+    <section id="viernes" class="view-section">
+        <div class="day-title">VIERNES</div>
+        <div class="day-sub">FULL BODY</div>
+        <div id="list-viernes"></div>
+    </section>
+
+    <!-- === GUARDAVIDAS === -->
+    <section id="GUARDAVIDAS" class="view-section">
+        <div class="day-title">SABADO</div>
+        <div class="day-sub">DIA DE COOPER</div>
+        <div id="list-GUARDAVIDAS"></div>
+    </section>
+
+    <!-- === TRACKER === -->
+    <section id="tracker" class="view-section">
+        <div class="day-title">NUTRICIÓN</div>
+        <div class="day-sub">OBJETIVO: 2500 KCAL</div>
+
+        <div class="progress-box">
+            <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#888;">
+                <span>CALORÍAS</span> <span id="txt-kcal">0 / 2500</span>
+            </div>
+            <div class="bar-wrap"><div class="bar-val" id="bar-kcal"></div></div>
+            
+            <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#888; margin-top:15px;">
+                <span>PROTEÍNA</span> <span id="txt-prot">0 / 170g</span>
+            </div>
+            <div class="bar-wrap"><div class="bar-val" id="bar-prot" style="background:#00C2FF"></div></div>
+        </div>
+
+        <h3 style="margin-bottom:15px; color:#fff;">AGREGAR (PORCIONES)</h3>
+        <div class="food-grid">
+            <div class="food-item" onclick="addFood('pollo')"><span class="food-t">POLLO / CARNE</span><span class="food-s">1 plato</span></div>
+            <div class="food-item" onclick="addFood('huevo')"><span class="food-t">HUEVO</span><span class="food-s">1 Unidad</span></div>
+            <div class="food-item" onclick="addFood('arroz')"><span class="food-t">ARROZ / AVENA</span><span class="food-s">1 Taza</span></div>
+            <div class="food-item" onclick="addFood('papa')"><span class="food-t">PAPA / BATATA</span><span class="food-s">1 Puño</span></div>
+            <div class="food-item" onclick="addFood('atun')"><span class="food-t">ATÚN</span><span class="food-s">1 Lata</span></div>
+            <div class="food-item" onclick="addFood('yogur')"><span class="food-t">YOGUR</span><span class="food-s">1 Vaso</span></div>
+            <div class="food-item" onclick="addFood('pan')"><span class="food-t">PAN</span><span class="food-s">2 Rodajas</span></div>
+            <div class="food-item" onclick="addFood('manteca')"><span class="food-t">MANTECA</span><span class="food-s">Para la comida</span></div>
+        </div>
+
+        <div style="margin-top:20px; padding:15px; border:1px solid #00C2FF; border-radius:12px; text-align:center; background:rgba(0,194,255,0.05);">
+            <h3 style="color:#00C2FF; margin-bottom:5px;">HIDRATACIÓN</h3>
+            <div style="font-size:2.5rem; font-weight:900;"><span id="val-agua">0</span><span style="font-size:1rem; color:#666;"> / 12</span></div>
+            <div style="display:flex; justify-content:center; gap:10px;">
+                <button class="t-btn" onclick="modAgua(-1)">-</button>
+                <button class="t-btn" style="background:#00C2FF; color:#000" onclick="modAgua(1)">+</button>
+            </div>
+        </div>
+
+        <button onclick="resetDay()" style="width:100%; padding:15px; margin-top:30px; border:1px solid var(--danger); background:none; color:var(--danger); border-radius:10px; font-weight:bold;">RESETEAR DÍA</button>
+    </section>
+
+    <!-- NAVBAR INFERIOR -->
+    <nav class="nav-bar">
+        <button class="nav-btn active" onclick="nav('lunes')"><span class="nav-icon">💪</span>LUNES</button>
+        <button class="nav-btn" onclick="nav('miercoles')"><span class="nav-icon">🦵</span>MIÉRC</button>
+        <button class="nav-btn" onclick="nav('jueves')"><span class="nav-icon">🦍</span>JUEVES</button>
+        <button class="nav-btn" onclick="nav('viernes')"><span class="nav-icon">⚡</span>VIERNES</button>
+        <button class="nav-btn" onclick="nav('tracker')"><span class="nav-icon">📊</span>DIETA</button>
+        <button class="nav-btn" onclick="nav('GUARDAVIDAS')"><span class="nav-icon">🏊‍♀️</span>GUARDAVIDAS</button>
+    </nav>
+
+    <script>
+        // --- BASE DE DATOS DE EJERCICIOS (LA COMPLETA) ---
+        const exercises = {
+            'lunes': [
+                {name: "PRESS INCLINADO CON MANCUERNAS", s1: "4x15", s4: "3x FALLO", s5: "2x15", gif: "https://media.tenor.com/3bJRUkfLN3EAAAAM/supino-na-maquina.gif"},
+                {name: "APERTURAS EN MAQUINA DE PECHO", s1: "4x15", s4: "3x FALLO", s5: "Sin S5 para cuidar hombro", gif: "https://fitcron.com/wp-content/uploads/2021/03/05961301-Lever-Seated-Fly_Chest_720.gif"},
+                {name: "FLEXIONES NORMALES E INCLINADAS", s1: "4x15-20", s4: "3x FALLO", s5: "2x 20", gif: "https://fitcron.com/wp-content/uploads/2021/03/05961301-Lever-Seated-Fly_Chest_720.gif"},
+                {name: "VUELOS LATERALES CON MANCUERNAS", s1: "3x20", s4: "2x FALLO", s5: "2x15", gif: "https://media.tenor.com/ovXX2zNn7-AAAAAM/push-ups.gif"},
+                {name: "FONDOS EN PARALELAS", s1: "3x AL FALLO CORPORAL", s4: "2x FALLO", s5: "NO HACER", gif: "https://media.tenor.com/NqUp0-i0b-QAAAAM/pause-bench-bench-press.gif"},
+                {name: "EXTENSION TRICEPS EN V (4 o 5 ladrillos)", s1: "4x15", s4: "3x FALLO", s5: "2x12", gif: "https://media.tenor.com/kPArg2fOd4sAAAAM/tricep-pushdown-triceps.gif"},
+                {name: "CRUNCH DECLINADO C/PESO 20KG", s1: "4x10", s4: "3x FALLO", s5: "2x15", gif: "https://media.tenor.com/mJg8s-G0bLwAAAAM/decline-crunch-abs.gif"}
+            ],
+            'miercoles': [
+                {name: "SENTADILLAS ATRAS", s1: "4x15", s4: "3x FALLO TECNICO", s5: "Sin S5", gif: "https://media.tenor.com/TAiFkK4TjZwAAAAM/squat-barbell-squat.gif"},
+                {name: "ESTOCADAS CAMINANDO CON MANCUERNAS", s1: "4x20 pasos totales (10 ida, 10 vuelta)", s4: "2x FALLO", s5: "2x30 (15 ida, 15 vuelta)", gif: "https://media.tenor.com/C9-SjRfDWnUAAAAM/barbell-lunge.gif"},
+                {name: "SILLON DE CUADRICEPS (EXTENSIONES)", s1: "4x20", s4: "3x FALLO", s5: "2x20", gif: "https://media.tenor.com/5VFFuD5qC7EAAAAM/seated-calf-raise.gif"},
+                {name: "GEMELOS EN MAQUINA (PARADO O SMITH)", s1: "4x20", s4: "3x FALLO", s5: "2x15", gif: "https://media.tenor.com/3Lz2t4Hf-k4AAAAM/leg-press.gif"},
+                {name: "PESO MUERTO RUMANO APOYADO EN DISCO DE 20KG", s1: "3x15", s4: "2x FALLO TECNICO", s5: "2x20", gif: "https://media.tenor.com/uG3t-tCN-jAAAAAM/romanian-deadlift-rdl.gif"},
+            ],
+            'jueves': [
+                {name: "DOMINADAS PRONO", s1: "4x AL FALLO MUSCULAR", s4: "2x FALLO", s5: "2x AL FALLO MUSCULAR", gif: "https://media.tenor.com/wS0YdltCsJgAAAAM/pull-up.gif"},
+                {name: "JALON AL PECHO CON AGARRE ABIERTO", s1: "4x15", s4: "3x FALLO", s5: "2x18", gif: "https://media.tenor.com/4EaVyNl-iQsAAAAM/lat-pulldown-neutral-grip.gif"},
+                {name: "REMO EN POLEA BAJA (AGARRE ESTRECHO)", s1: "4x15", s4: "3x FALLO TECNICO", s5: "2x17", gif: "https://media.tenor.com/X-cM5-c6iOAAAAAM/barbell-row.gif"},
+                {name: "CURL INCLINADO CON MANCUERNAS", s1: "4x10-12", s4: "3x FALLO", s5: "2x12", gif: "https://media.tenor.com/dMMs-V9yJ-oAAAAM/incline-dumbbell-curl.gif"},
+                {name: "ELEVACION LATERAL", s1: "4x20", s4: "1x FALLO", s5: "2x10", gif: "https://media.tenor.com/XWgw-OY3dRsAAAAM/dumbbell-lateral-raise.gif"},
+                {name: "CURL DE BICEPS CON BARRA Z (DE PIE)", s1: "3x15", s4: "2x FALLO", s5: "2x10", gif: "https://api.smartworkout.app/asset/image/42dce89a-8171-4915-a9f0-42dd0d99bb93"}
+            ],
+            'viernes': [
+                {name: "THRUSTERS CON BARRA (LIVIANO)", s1: "4x15 (SIN PARAR)", s4: "3x FALLO", s5: "2x10", gif: "https://burnfit.io/wp-content/uploads/2023/11/THRUSTER.gif"},
+                {name: "BULGARAS CON MANCUERNAS (LIVIANO)", s1: "4x20 c/l", s4: "3x FALLO", s5: "2x15", gif: "https://media.tenor.com/jG-p9e3FjB0AAAAM/bulgarian-split-squat.gif"},
+                {name: "DOMINADAS TOMA PRONO", s1: "4x AL FALLO MUSCULAR", s4: "3x FALLO", s5: "2x6 FALLO", gif: "https://media.tenor.com/FwRSsXG0INgAAAAM/chin-up.gif"},
+                {name: "BURPEES", s1: "4x12-15", s4: "2x FALLO", s5: "2x15", gif: "https://media1.giphy.com/media/v1.Y2lkPTZjMDliOTUyYnNuNmttZWR3MmFrOHd3NzZnb2N0MzZwZTJvMTV3YTU0MG14MnpqcSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/l4pT6Obikzs5gxWSI/giphy.gif"},
+                {name: "SWING CON PESAS RUSAS", s1: "4x20 (EXPLOSIVAS)", s4: "2x FALLO", s5: "2x20", gif: "https://media.tenor.com/0PlWgJxSNi0AAAAM/single-bd-swing-dumbbell-workout.gif"},
+                {name: "RENEGADE ROW", s1: "4x12-16 (6 U 8 POR LADO)", s4: "2x FALLO", s5: "2x30", gif: "https://fitnessprogramer.com/wp-content/uploads/2021/01/dumbbell-renegade-row-1.gif"},
+                {name: "PRESS MILITAR MANCUERNAS DE PIE", s1: "3x15", s4: "2x FALLO", s5: "2x10", gif: "https://media.tenor.com/1G66n-z-YyYAAAAM/dumbbell-shoulder-press.gif"},
+                {name: "CRUNCH EN POLEA", s1: "3x3", s4: "2x FALLO", s5: "2x8", gif: "https://media.tenor.com/jM8cIsj-fnQAAAAM/one-arm-push-up.gif"}
+            ],
+             'GUARDAVIDAS': [
+                {name: "CORRER 12 MINUTOS (ANOTAR LA DISTANCIA)" }
+        ] 
+        };
+
+    
+        let currentWeek = 1;              //BALANZA DE CALORIAS Y PROTEINA DE LOS ALIMENTOS
+        let data = { kcal:0, prot:0, agua:0 };
+        const foods = {'pollo':{k:200,p:25}, 'huevo':{k:155,p:13}, 'arroz':{k:130,p:3}, 'papa':{k:80,p:3}, 'atun':{k:240,p:20}, 'yogur':{k:126,p:6}, 'pan':{k:140,p:5}, 'manteca':{k:75,p:1}};
+
+        window.onload = function() {
+            // Cargar datos guardados
+            const savedWeek = localStorage.getItem('pb_week_final');
+            if(savedWeek) currentWeek = parseInt(savedWeek);
+            else document.getElementById('weekSelector').style.display = 'flex';
+            
+            updateWeekBadge();
+            
+            const savedData = localStorage.getItem('pb_data_final');
+            if(savedData) data = JSON.parse(savedData);
+            
+            renderLists();
+            updateTrackerUI();
+            loadWeights();
+        };
+
+        function renderLists() {
+            ['lunes', 'miercoles', 'jueves', 'viernes', 'GUARDAVIDAS'].forEach(day => {
+                const container = document.getElementById('list-' + day);
+                container.innerHTML = '';
+                exercises[day].forEach((ex, idx) => {
+                    const id = `${day}_${idx}`;
+                    let s4Class = currentWeek === 4 ? 'highlight-s4' : '';
+                    let s5Class = currentWeek === 5 ? 'highlight-s5' : '';
+                    
+                    let html = `
+                    <div class="ex-card" id="card_${id}">
+                        <div class="ex-header" onclick="toggle('${id}')">
+                            <span class="ex-name">${ex.name}</span>
+                            <span class="ex-toggle" id="icon_${id}">+</span>
+                        </div>
+                        <div class="ex-body" id="body_${id}">
+                            <div class="set-grid">
+                                <div class="set-box"><span class="set-label">S1-S3</span><span class="set-val">${ex.s1}</span></div>
+                                <div class="set-box ${s4Class}"><span class="set-label">S4</span><span class="set-val ${currentWeek===4?'text-s4':''}">${ex.s4}</span></div>
+                                <div class="set-box ${s5Class}"><span class="set-label">S5</span><span class="set-val ${currentWeek===5?'text-s5':''}">${ex.s5}</span></div>
+                            </div>
+                            <div class="tools-bar">
+                                <button class="btn-tool btn-gif" onclick="showGif('${ex.gif}')">👁 VER</button>
+                                <input type="text" class="inp-weight" id="w_${id}" placeholder="KG">
+                                <button class="btn-tool btn-save" onclick="saveWeight('w_${id}')">GUARDAR</button>
+                            </div>
+                        </div>
+                    </div>`;
+                    container.innerHTML += html;
+                });
+                
+                // Add Finishers
+                if(day === 'lunes') addFinisher(container, "FINISHER ABS (UNO ATRAS DEL OTRO SIN DESCANSO) (3-4 RONDAS) (DESCANSAR 1 MINUTO AL TERMINAR LA RONDA)", ["Dragon Flags apoyado en banco", "Crunch en paralelas de fondos 15 A 20 REPETICIONES", "Plancha frontal con peso", "Ab Wheel", "Al finalizar 10 minutos de bicicleta"]);
+                if(day === 'miercoles') addFinisher(container, "FINISHER ABS (UNO ATRAS DEL OTRO SIN DESCANSO) (3.4 RONDAS) (DESCANSAR 1 MINUTO AL TERMINAR LA RONDA)", ["Dragon Flags apoyado en banco", "Crunch en Polea Alta 20 REPETICIONES", "Plancha frontal con peso", "Giros Rusos 20 REPETICIONES (10 POR LADO)", "Al finalizar 15 minutos de bicicleta"]);
+                if(day === 'viernes') addFinisher(container, "FINISHER ABS VIERNES", ["Elev. Colgado", "Abs completos con peso", "Dragon Flags", "Al finalizar 10-15 minutos de bicicleta" ]);
+            });
+        }
+
+        function addFinisher(container, title, items) {
+            let listHtml = items.map(i => `<li>${i}</li>`).join('');
+            container.innerHTML += `<div style="padding:15px; border:1px dashed #333; border-radius:12px; margin-top:10px;"><h4 style="color:#fff; margin-bottom:5px;">${title}</h4><ul style="color:#888; padding-left:20px; font-size:0.85rem;">${listHtml}</ul></div>`;
+        }
+
+        function toggle(id) {
+            const card = document.getElementById('card_' + id);
+            card.classList.toggle('open');
+        }
+
+        // --- NAVIGATION ---
+        function nav(id) {
+            document.querySelectorAll('.view-section').forEach(e => e.classList.remove('active'));
+            document.querySelectorAll('.tab-pill').forEach(e => e.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(e => e.classList.remove('active'));
+            
+            document.getElementById(id).classList.add('active');
+            // Update UI active states
+            const pills = document.querySelectorAll('.tab-pill');
+            const btns = document.querySelectorAll('.nav-btn');
+            
+            // Map simple logic
+            if(id==='lunes') { pills[0].classList.add('active'); btns[0].classList.add('active'); }
+            if(id==='miercoles') { pills[1].classList.add('active'); btns[1].classList.add('active'); }
+            if(id==='jueves') { pills[2].classList.add('active'); btns[2].classList.add('active'); }
+            if(id==='viernes') { pills[3].classList.add('active'); btns[3].classList.add('active'); }
+            if(id==='tracker') { pills[4].classList.add('active'); btns[4].classList.add('active'); }
+            if(id==='GUARDAVIDAS') { pills[5].classList.add('active'); btns[5].classList.add('active'); }
+            
+            window.scrollTo(0,0);
+        }
+
+        // --- WEEK LOGIC ---
+        function openWeekModal() { document.getElementById('weekSelector').style.display = 'flex'; }
+        function setWeek(w) {
+            currentWeek = w;
+            localStorage.setItem('pb_week_final', w);
+            document.getElementById('weekSelector').style.display = 'none';
+            updateWeekBadge();
+            renderLists(); // Re-render to show colors
+            loadWeights(); // Re-load weights
+        }
+        function updateWeekBadge() {
+            const b = document.getElementById('weekBadge');
+            b.innerText = "SEM " + currentWeek;
+            b.style.borderColor = currentWeek===4 ? 'var(--danger)' : (currentWeek===5 ? 'var(--warning)' : '#333');
+            b.style.color = currentWeek===4 ? 'var(--danger)' : (currentWeek===5 ? 'var(--warning)' : '#fff');
+        }
+
+        // --- TRACKER ---
+        function addFood(k) { data.kcal+=foods[k].k; data.prot+=foods[k].p; save(); }
+        function modAgua(n) { data.agua+=n; if(data.agua<0) data.agua=0; save(); }
+        function resetDay() { if(confirm("¿Resetear?")) { data={kcal:0,prot:0,agua:0}; save(); } }
+        function save() { localStorage.setItem('pb_data_final', JSON.stringify(data)); updateTrackerUI(); }
+        function updateTrackerUI() {
+            document.getElementById('txt-kcal').innerText = `${data.kcal} / 2500`;
+            document.getElementById('txt-prot').innerText = `${data.prot} / 170g`;
+            document.getElementById('val-agua').innerText = data.agua;
+            
+            let kp = Math.min((data.kcal/2500)*100, 100);
+            let pp = Math.min((data.prot/170)*100, 100);
+            document.getElementById('bar-kcal').style.width = kp+'%';
+            document.getElementById('bar-prot').style.width = pp+'%';
+        }
+
+        // --- PESOS ---
+        function saveWeight(id) {
+            const v = document.getElementById(id).value;
+            localStorage.setItem(id, v);
+            const btn = document.querySelector(`button[onclick="saveWeight('${id}')"]`);
+            btn.innerText = "OK"; btn.style.background = "var(--success)";
+            setTimeout(() => { btn.innerText = "GUARDAR"; btn.style.background = "var(--primary)"; }, 1000);
+        }
+        function loadWeights() {
+            document.querySelectorAll('.inp-weight').forEach(i => {
+                const v = localStorage.getItem(i.id);
+                if(v) i.value = v;
+            });
+        }
+
+        // --- GIF & TIMER ---
+        function showGif(url) { document.getElementById('gifImg').src = url; document.getElementById('gifModal').classList.add('show'); }
+        function closeGif() { document.getElementById('gifModal').classList.remove('show'); document.getElementById('gifImg').src = ''; }
+        
+        let tInt, time=0;
+        function toggleTimer() { 
+            const ol = document.getElementById('timerOverlay');
+            ol.style.display = ol.style.display==='flex'?'none':'flex';
+        }
+        function startTimer(s) {
+            clearInterval(tInt); time=s;
+            document.getElementById('timerOverlay').style.display='none';
+            updTimer();
+            tInt = setInterval(() => { time--; updTimer(); if(time<=0){clearInterval(tInt); navigator.vibrate(200); alert("TIEMPO");} }, 1000);
+        }
+        function stopTimer() { clearInterval(tInt); time=0; updTimer(); document.getElementById('timerOverlay').style.display='none'; }
+        function updTimer() {
+            let m=Math.floor(time/60), s=time%60;
+            document.getElementById('timerDisplay').innerText = `${m}:${s<10?'0'+s:s}`;
+        }
+
+    </script>
+</body>
+</html>
